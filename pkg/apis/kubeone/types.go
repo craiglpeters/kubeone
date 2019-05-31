@@ -40,6 +40,8 @@ type KubeOneCluster struct {
 	Versions VersionConfig `json:"versions,omitempty"`
 	// ClusterNetwork configures the in-cluster networking
 	ClusterNetwork ClusterNetworkConfig `json:"clusterNetwork,omitempty"`
+	// Bastion is the instance over which control plane nodes are configured
+	Bastion *BastionConfig `json:"bastion,omitempty"`
 	// Proxy configures proxy used while installing Kubernetes and by the Docker daemon
 	Proxy ProxyConfig `json:"proxy,omitempty"`
 	// Workers is used to create worker nodes using the Kubermatic machine-controller
@@ -141,6 +143,15 @@ type CNI struct {
 	Provider CNIProvider `json:"provider"`
 	// Encrypted enables encryption for supported CNI plugins
 	Encrypted bool `json:"encrypted"`
+}
+
+// BastionConfig describes the bastion instance over which control plane instances are configured
+type BastionConfig struct {
+	Address           string
+	SSHPort           int    `json:"sshPort"`
+	SSHUsername       string `json:"sshUsername"`
+	SSHPrivateKeyFile string `json:"sshPrivateKeyFile"`
+	SSHAgentSocket    string `json:"sshAgentSocket"`
 }
 
 // ProxyConfig configures proxy for the Docker daemon and is used by KubeOne scripts

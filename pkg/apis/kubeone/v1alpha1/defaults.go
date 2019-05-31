@@ -39,6 +39,7 @@ func SetDefaults_KubeOneCluster(obj *KubeOneCluster) {
 	SetDefaults_Hosts(obj)
 	SetDefaults_APIEndpoints(obj)
 	SetDefaults_ClusterNetwork(obj)
+	SetDefaults_Bastion(obj)
 	SetDefaults_MachineController(obj)
 	SetDefaults_Features(obj)
 }
@@ -93,6 +94,20 @@ func SetDefaults_ClusterNetwork(obj *KubeOneCluster) {
 	}
 }
 
+func SetDefaults_Bastion(obj *KubeOneCluster) {
+	if obj.Bastion != nil {
+		if len(obj.Bastion.SSHPrivateKeyFile) == 0 && len(obj.Bastion.SSHAgentSocket) == 0 {
+			obj.Bastion.SSHAgentSocket = "env:SSH_AUTH_SOCK"
+		}
+		if obj.Bastion.SSHUsername == "" {
+			obj.Bastion.SSHUsername = "root"
+		}
+		if obj.Bastion.SSHPort == 0 {
+			obj.Bastion.SSHPort = 22
+		}
+	}
+}
+
 func SetDefaults_MachineController(obj *KubeOneCluster) {
 	if obj.MachineController == nil {
 		obj.MachineController = &MachineControllerConfig{
@@ -125,5 +140,8 @@ func defaultHostConfig(obj *HostConfig) {
 	}
 	if obj.SSHUsername == "" {
 		obj.SSHUsername = "root"
+	}
+	if obj.SSHPort == 0 {
+		obj.SSHPort = 22
 	}
 }

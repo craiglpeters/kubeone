@@ -51,6 +51,10 @@ func ValidateKubeOneCluster(c kubeone.KubeOneCluster) field.ErrorList {
 	allErrs = append(allErrs, ValidateClusterNetworkConfig(c.ClusterNetwork, field.NewPath("clusterNetwork"))...)
 	allErrs = append(allErrs, ValidateFeatures(c.Features, field.NewPath("features"))...)
 
+	if c.Bastion != nil {
+		allErrs = append(allErrs, ValidateBastionConfig(c.Bastion, field.NewPath("bastion"))...)
+	}
+
 	return allErrs
 }
 
@@ -211,6 +215,17 @@ func ValidateOIDCConfig(o kubeone.OpenIDConnectConfig, fldPath *field.Path) fiel
 	}
 	if o.ClientID == "" {
 		allErrs = append(allErrs, field.Invalid(fldPath, o.ClientID, "openid_connect.config.client_id can't be empty"))
+	}
+
+	return allErrs
+}
+
+// ValidateBastionConfig validates the bastion configuration
+func ValidateBastionConfig(o *kubeone.BastionConfig, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if o.Address == "" {
+		allErrs = append(allErrs, field.Invalid(fldPath, o.Address, "bastion.address can't be empty"))
 	}
 
 	return allErrs
