@@ -19,6 +19,7 @@ package installation
 import (
 	"fmt"
 
+	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 
 	kubeoneapi "github.com/kubermatic/kubeone/pkg/apis/kubeone"
@@ -30,8 +31,14 @@ import (
 func generateKubeadm(ctx *util.Context) error {
 	ctx.Logger.Infoln("Generating kubeadm config file…")
 
+	ver, err := semver.NewVersion(ctx.Cluster.Versions.Kubernetes)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse version %q", ctx.Cluster.Versions.Kubernetes)
+	}
+
+	kubeadmProvider := kubeadm.NewProvider(ver)
 	for idx := range ctx.Cluster.Hosts {
-		kubeadm, err := kubeadm.Config(ctx, ctx.Cluster.Hosts[idx])
+		kubeadm, err := kubeadmProvider.Config(ctx, ctx.Cluster.Hosts[idx])
 		if err != nil {
 			return errors.Wrap(err, "failed to create kubeadm configuration")
 		}

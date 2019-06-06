@@ -17,30 +17,47 @@ limitations under the License.
 package upgrade
 
 import (
+	"github.com/Masterminds/semver"
+	"github.com/pkg/errors"
+
+	"github.com/kubermatic/kubeone/pkg/templates/kubeadm"
 	"github.com/kubermatic/kubeone/pkg/util"
 )
 
 const (
 	kubeadmUpgradeLeaderCommand = `
-sudo kubeadm upgrade apply \
+sudo {{ .KUBEADM_UPGRADE }} \
 	--config=./{{ .WORK_DIR }}/cfg/master_0.yaml \
 	-y {{ .VERSION }}
 `
 	kubeadmUpgradeFollowerCommand = `
-sudo kubeadm upgrade node experimental-control-plane
+sudo {{ .KUBEADM_UPGRADE }}
 `
 )
 
 func upgradeLeaderControlPlane(ctx *util.Context) error {
-	_, _, err := ctx.Runner.Run(kubeadmUpgradeLeaderCommand, util.TemplateVariables{
-		"VERSION":  ctx.Cluster.Versions.Kubernetes,
-		"WORK_DIR": ctx.WorkDir,
+	ver, err := semver.NewVersion(ctx.Cluster.Versions.Kubernetes)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse kubernetes version %q", ctx.Cluster.Versions.Kubernetes)
+	}
+	kubeadmprovider := kubeadm.NewProvider(ver)
+	_, _, err = ctx.Runner.Run(kubeadmUpgradeLeaderCommand, util.TemplateVariables{
+		"KUBEADM_UPGRADE": kubeadmprovider.UpgradeLeaderCMD(),
+		"VERSION":         ctx.Cluster.Versions.Kubernetes,
+		"WORK_DIR":        ctx.WorkDir,
 	})
 
 	return err
 }
 
 func upgradeFollowerControlPlane(ctx *util.Context) error {
-	_, _, err := ctx.Runner.Run(kubeadmUpgradeFollowerCommand, util.TemplateVariables{})
+	ver, err := semver.NewVersion(ctx.Cluster.Versions.Kubernetes)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse kubernetes version %q", ctx.Cluster.Versions.Kubernetes)
+	}
+	kubeadmprovider := kubeadm.NewProvider(ver)
+	_, _, err = ctx.Runner.Run(kubeadmUpgradeFollowerCommand, util.TemplateVariables{
+		"KUBEADM_UPGRADE": kubeadmprovider.UpgradeFollowerCMD(),
+	})
 	return err
 }

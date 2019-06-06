@@ -17,6 +17,7 @@ limitations under the License.
 package upgrade
 
 import (
+	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 
 	kubeoneapi "github.com/kubermatic/kubeone/pkg/apis/kubeone"
@@ -26,13 +27,17 @@ import (
 )
 
 func generateKubeadmConfig(ctx *util.Context, node kubeoneapi.HostConfig) error {
-	kubeadmConf, err := kubeadm.Config(ctx, node)
+	ver, err := semver.NewVersion(ctx.Cluster.Versions.Kubernetes)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse version %q", ctx.Cluster.Versions.Kubernetes)
+	}
+
+	kubeadmConf, err := kubeadm.NewProvider(ver).Config(ctx, node)
 	if err != nil {
 		return errors.Wrap(err, "failed to create kubeadm configuration")
 	}
 
 	ctx.Configuration.AddFile("cfg/master_0.yaml", kubeadmConf)
-
 	return nil
 }
 
