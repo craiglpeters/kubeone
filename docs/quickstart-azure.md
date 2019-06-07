@@ -246,7 +246,7 @@ kubeone reset config.yaml --tfjson tf.json
 ```
 
 This command will wait for all worker nodes to be gone. Once it's done you can
-proceed and destroy the vSphere infrastructure using Terraform:
+proceed and destroy the Azure infrastructure using Terraform:
 
 ```bash
 terraform destroy
